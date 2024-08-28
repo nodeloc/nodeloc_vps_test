@@ -179,7 +179,7 @@ update_system() {
     esac
     
     echo -e "${YELLOW}正在更新系统...${NC}"
-    $update_cmd
+    sudo $update_cmd
     if [ $? -eq 0 ]; then
         sudo $upgrade_cmd
         if [ $? -eq 0 ]; then
