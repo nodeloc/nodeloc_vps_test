@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义版本
-CURRENT_VERSION="2024-08-19 v1.1.3" # 最新版本号
+CURRENT_VERSION="2024-08-28 v1.1.4" # 最新版本号
 SCRIPT_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/version.sh"
 
@@ -179,7 +179,7 @@ update_system() {
     esac
     
     echo -e "${YELLOW}正在更新系统...${NC}"
-    sudo $update_cmd
+    $update_cmd
     if [ $? -eq 0 ]; then
         sudo $upgrade_cmd
         if [ $? -eq 0 ]; then
