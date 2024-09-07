@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义版本
-CURRENT_VERSION="2024-09-07 v1.2.2" # 最新版本号
+CURRENT_VERSION="2024-09-07 v1.2.3" # 最新版本号
 SCRIPT_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/version.sh"
 PASTE_SERVICE_URL="http://nodeloc.uukk.de/test/"
@@ -322,22 +322,6 @@ detect_region() {
     esac
 }
 
-# 服务器 VPS 信息
-AUXILIARY_VPS="107.189.11.25"
-IPERF_PORT=5201
-TEST_DURATION=30
-
-run_iperf3_test() {
-    echo -e "${GREEN}服务端VPS位于卢森堡${NC}"
-    echo -e "${GREEN}连接到服务端进行iperf3测试。。。${NC}"
-    timeout ${TEST_DURATION}s iperf3 -c $AUXILIARY_VPS -p $IPERF_PORT -t $TEST_DURATION
-    if [ $? -eq 0 ]; then
-        echo -e "${YELLOW}iperf3 测试完成${NC}"
-    else
-        echo -e "${RED}iperf3 测试失败或超时${NC}"
-    fi
-}
-
 # 统计使用次数
 sum_run_times() {
     local COUNT=$(wget --no-check-certificate -qO- --tries=2 --timeout=2 "https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Feverett7623%2Fnodeloc_vps_test%2Fblob%2Fmain%2FNlbench.sh" 2>&1 | grep -m1 -oE "[0-9]+[ ]+/[ ]+[0-9]+")
@@ -442,17 +426,8 @@ run_script() {
             sed -i '/^$/d' "$temp_file"
             cp "$temp_file" "${output_file}_single_thread"
             ;;
-        # iperf3测试
-        8)
-            echo -e "运行${YELLOW}iperf3测试...${NC}"
-            run_iperf3_test | tee "$temp_file"
-            sed -i -e 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
-            sed -i -r '1,/\[ ID\] /d' "$temp_file"
-            sed -i '/^$/d' "$temp_file"
-            cp "$temp_file" "${output_file}_iperf3"
-            ;;
         # 回程路由
-        9)
+        8)
             echo -e "运行${YELLOW}回程路由测试...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
@@ -473,8 +448,8 @@ run_script() {
 generate_markdown_output() {
     local base_output_file=$1
     local temp_output_file="${base_output_file}.md"
-    local sections=("YABS" "融合怪" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "iperf3" "回程路由")
-    local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "iperf3" "route")
+    local sections=("YABS" "融合怪" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "回程路由")
+    local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "route")
     local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
 
     echo "[tabs]" | iconv -f UTF-8 -t UTF-8//IGNORE > "$temp_output_file"
@@ -504,7 +479,7 @@ generate_markdown_output() {
     # 生成包含时间戳和随机字符的文件名
     local timestamp=$(date +"%Y%m%d%H%M%S")
     local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-    local filename="${timestamp}${random_chars}"
+    local filename="${timestamp}-${random_chars}"
     local txt_filename="${filename}.txt"
     local html_filename="${filename}.html"
     
@@ -520,8 +495,6 @@ generate_markdown_output() {
        echo "$html_content" | curl -H "Content-Type: text/html; charset=utf-8" -s -X PUT --data-binary @- "$html_url"; then
         echo "测试结果已上传。您可以在以下链接查看："
         echo "$txt_url"
-        echo "结果链接已保存到 $base_output_file.url"
-        echo "$txt_url" > "$base_output_file.url"
     else
         echo "上传失败。结果已保存在本地文件 $temp_output_file"
     fi
@@ -554,13 +527,12 @@ run_selected_scripts() {
     echo "5. 响应测试"
     echo "6. 多线程测试"
     echo "7. 单线程测试"
-    echo "8. iperf3"
-    echo "9. 回程路由"
+    echo "8. 回程路由"
     echo "0. 返回"
     
     while true; do
         read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers
-        if [[ "$script_numbers" =~ ^(0|10|[1-9])(,(0|10|[1-9]))*$ ]]; then
+        if [[ "$script_numbers" =~ ^(0|10|[1-8])(,(0|10|[1-8]))*$ ]]; then
             break
         else
             echo -e "${RED}无效输入，请输入0-9之间的数字，用英文逗号分隔。${NC}"
@@ -583,8 +555,7 @@ run_selected_scripts() {
 
 # 主菜单
 main_menu() {
-    echo -e "${GREEN}测试项目：${NC}Yabs，融合怪，IP质量，流媒体解锁，响应测试，多线程测试，"
-    echo "           单线程测试，iperf3，回程路由。"
+    echo -e "${GREEN}测试项目：${NC}Yabs，融合怪，IP质量，流媒体解锁，响应测试，多线程测试，单线程测试，回程路由。"
     echo -e "${YELLOW}1. 执行所有测试脚本${NC}"
     echo -e "${YELLOW}2. 选择特定测试脚本${NC}"
     echo -e "${YELLOW}0. 退出${NC}"
