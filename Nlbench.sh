@@ -444,56 +444,51 @@ run_script() {
     echo -e "${GREEN}测试完成。${NC}"
 }
 
-# 生成最终的 Markdown 输出
+# 设置全局字符集
+export LANG=en_US.UTF-8
+
+# 错误处理函数
+handle_error() {
+    echo "错误: $1" >&2
+    exit 1
+}
+
+# 编码转换函数
+convert_to_utf8() {
+    iconv -f UTF-8 -t UTF-8//IGNORE "$1" || handle_error "编码转换失败"
+}
+
+# 生成 Markdown 输出的优化版本
 generate_markdown_output() {
     local base_output_file=$1
     local temp_output_file="${base_output_file}.md"
-    local sections=("YABS" "融合怪" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "回程路由")
-    local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "route")
-    local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
+    
+    printf "[tabs]\n" > "$temp_output_file" || handle_error "无法创建输出文件"
 
-    # 修改这里，添加 UTF-8 编码设置
-    echo "[tabs]" | iconv -f UTF-8 -t UTF-8//IGNORE > "$temp_output_file"
-
-    # 输出有内容的标签
     for i in "${!sections[@]}"; do
         section="${sections[$i]}"
         suffix="${file_suffixes[$i]}"
         if [ -f "${base_output_file}_${suffix}" ]; then
-            echo "[tab=\"$section\"]" | iconv -f UTF-8 -t UTF-8//IGNORE >> "$temp_output_file"
-            echo "\`\`\`" >> "$temp_output_file"
-            cat "${base_output_file}_${suffix}" | iconv -f UTF-8 -t UTF-8//IGNORE >> "$temp_output_file"
-            echo "\`\`\`" >> "$temp_output_file"
-            echo "[/tab]" >> "$temp_output_file"
+            printf "[tab=\"%s\"]\n\`\`\`\n" "$section" >> "$temp_output_file"
+            convert_to_utf8 "${base_output_file}_${suffix}" >> "$temp_output_file"
+            printf "\`\`\`\n[/tab]\n" >> "$temp_output_file"
             rm "${base_output_file}_${suffix}"
         fi
     done
 
-    # 添加保留的空白标签
-    for tab in "${empty_tabs[@]}"; do
-        echo "[tab=\"$tab\"]" >> "$temp_output_file"
-        echo "[/tab]" >> "$temp_output_file"
-    done
+    printf "[/tabs]\n" >> "$temp_output_file"
 
-    echo "[/tabs]" >> "$temp_output_file"
+    # 使用 UTF-8 文件名
+    local filename=$(printf "%s%s.txt" "$(date +"%Y%m%d%H%M%S")" "$(tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 6 | head -n 1)")
+    local url="${PASTE_SERVICE_URL}${filename}"
 
-    # 生成包含时间戳和随机字符的文件名
-    local timestamp=$(date +"%Y%m%d%H%M%S")
-    local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-    local filename="${timestamp}${random_chars}.txt"
-    
-    # 构造完整的URL
-    local url="http://nodeloc.uukk.de/test/${filename}"
-    
-    # 上传文件
-if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$url"; then
-    echo "测试结果已上传。您可以在以下链接查看："
-    echo "$url"
-    echo "结果链接已保存到 $base_output_file.url"
-    echo "$url" > "$base_output_file.url"
-else
-    echo "上传失败。结果已保存在本地文件 $temp_output_file"
-fi
+    # 优化的 curl 命令
+    if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$url" --retry 3 --retry-delay 2; then
+        printf "测试结果已上传。您可以在以下链接查看：\n%s\n" "$url"
+        printf "%s\n" "$url" > "$base_output_file.url"
+    else
+        handle_error "上传失败。结果已保存在本地文件 $temp_output_file"
+    fi
 
     rm "$temp_output_file"
     read -p "按回车键继续..."
