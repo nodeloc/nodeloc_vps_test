@@ -477,16 +477,16 @@ generate_markdown_output() {
     local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "iperf3" "route")
     local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
 
-    echo "[tabs]" > "$temp_output_file"
+    echo "[tabs]" | iconv -f UTF-8 -t UTF-8//IGNORE > "$temp_output_file"
 
     # 输出有内容的标签
     for i in "${!sections[@]}"; do
         section="${sections[$i]}"
         suffix="${file_suffixes[$i]}"
         if [ -f "${base_output_file}_${suffix}" ]; then
-            echo "[tab=\"$section\"]" >> "$temp_output_file"
+            echo "[tab=\"$section\"]" | iconv -f UTF-8 -t UTF-8//IGNORE >> "$temp_output_file"
             echo "\`\`\`" >> "$temp_output_file"
-            cat "${base_output_file}_${suffix}" >> "$temp_output_file"
+            cat "${base_output_file}_${suffix}" | iconv -f UTF-8 -t UTF-8//IGNORE >> "$temp_output_file"
             echo "\`\`\`" >> "$temp_output_file"
             echo "[/tab]" >> "$temp_output_file"
             rm "${base_output_file}_${suffix}"
@@ -504,17 +504,24 @@ generate_markdown_output() {
     # 生成包含时间戳和随机字符的文件名
     local timestamp=$(date +"%Y%m%d%H%M%S")
     local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-    local filename="${timestamp}${random_chars}.txt"
+    local filename="${timestamp}${random_chars}"
+    local txt_filename="${filename}.txt"
+    local html_filename="${filename}.html"
     
     # 构造完整的URL
-    local url="http://nodeloc.uukk.de/test/${filename}"
+    local txt_url="http://nodeloc.uukk.de/test/${txt_filename}"
+    local html_url="http://nodeloc.uukk.de/test/${html_filename}"
+    
+    # 创建HTML文件内容
+    local html_content="<html><head><meta http-equiv=\"refresh\" content=\"0; url=${txt_url}\"></head></html>"
     
     # 上传文件
-    if curl -s -X PUT --data-binary @"$temp_output_file" "$url"; then
+    if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$txt_url" && \
+       echo "$html_content" | curl -H "Content-Type: text/html; charset=utf-8" -s -X PUT --data-binary @- "$html_url"; then
         echo "测试结果已上传。您可以在以下链接查看："
-        echo "$url"
+        echo "$html_url"
         echo "结果链接已保存到 $base_output_file.url"
-        echo "$url" > "$base_output_file.url"
+        echo "$html_url" > "$base_output_file.url"
     else
         echo "上传失败。结果已保存在本地文件 $temp_output_file"
     fi
