@@ -413,10 +413,10 @@ run_script() {
             echo -e "运行${YELLOW}多线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
-            bash <(curl -sL bash.icu/speedtest) <<< "3" | tee "$temp_file"
+            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "3" | tee "$temp_file"
             else
             echo "使用IPv4测试选项"
-             bash <(curl -sL bash.icu/speedtest) <<< "1" | tee "$temp_file"
+            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "1" | tee "$temp_file"
             fi
             sed -r -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -r '1,/序号\:/d' "$temp_file"
