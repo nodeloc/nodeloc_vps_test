@@ -452,7 +452,6 @@ generate_markdown_output() {
     local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "route")
     local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
 
-    # 生成 Markdown 文件内容并确保使用 UTF-8 编码
     echo "[tabs]" > "$temp_output_file"
 
     for i in "${!sections[@]}"; do
@@ -475,11 +474,10 @@ generate_markdown_output() {
 
     echo "[/tabs]" >> "$temp_output_file"
 
-    # 确保文件以 UTF-8 编码保存，防止乱码
-    iconv -f UTF-8 -t UTF-8//IGNORE "$temp_output_file" -o "${temp_output_file}.utf8"
+    # 确保文件以 UTF-8 编码保存
+    iconv -f UTF-8 -t UTF-8 "$temp_output_file" -o "${temp_output_file}.utf8"
     mv "${temp_output_file}.utf8" "$temp_output_file"
 
-    # 生成时间戳和随机字符串文件名
     local timestamp=$(date +"%Y%m%d%H%M%S")
     local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
     local filename="${timestamp}-${random_chars}.txt"
@@ -487,10 +485,9 @@ generate_markdown_output() {
 
     # 上传文件到 VPS，确保使用 UTF-8 编码
     if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$txt_url"; then
-        echo "测试结果已上传。您可以在以下链接查看："
-        echo "$txt_url"
+        echo "测试结果已上传。您可以在以下链接查看：$txt_url"
     else
-        echo "上传失败。结果已保存在本地文件 $temp_output_file"
+        echo "上传失败。结果已保存在本地文件 $(realpath "$temp_output_file")"
     fi
 
     # 删除本地的 Markdown 文件
