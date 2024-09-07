@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义版本
-CURRENT_VERSION="2024-09-07 v1.2.0" # 最新版本号
+CURRENT_VERSION="2024-09-07 v1.2.1" # 最新版本号
 SCRIPT_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/version.sh"
 PASTE_SERVICE_URL="http://nodeloc.uukk.de/test/"
