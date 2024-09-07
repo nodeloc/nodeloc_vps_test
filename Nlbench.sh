@@ -473,8 +473,8 @@ run_script() {
 generate_markdown_output() {
     local base_output_file=$1
     local temp_output_file="${base_output_file}.md"
-    local sections=("YABS" "Geekbench5" "融合怪" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "iperf3" "回程路由")
-    local file_suffixes=("yabs" "gb5" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "iperf3" "route")
+    local sections=("YABS" "融合怪" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "iperf3" "回程路由")
+    local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "iperf3" "route")
     local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
 
     echo "[tabs]" > "$temp_output_file"
@@ -507,7 +507,7 @@ generate_markdown_output() {
     local filename="${timestamp}${random_chars}.txt"
     
     # 构造完整的URL
-    local url="${PASTE_SERVICE_URL}${filename}"
+    local url="http://nodeloc.uukk.de/test/${filename}"
     
     # 上传文件
     if curl -s -X PUT --data-binary @"$temp_output_file" "$url"; then
