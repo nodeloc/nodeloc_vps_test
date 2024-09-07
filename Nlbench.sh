@@ -369,38 +369,8 @@ run_script() {
             sed -i '/^\s*$/d'   "$temp_file"
             cp "$temp_file" "${output_file}_yabs"
             ;;
-        # Geekbench5
-        2)
-            # 获取系统总内存（包括swap），单位为MB
-            total_memory_mb=$(free -m | awk '/^Mem:/{print $2}')
-            total_swap_mb=$(free -m | awk '/^Swap:/{print $2}')
-            total_memory_swap=$((total_memory_mb + total_swap_mb))
-
-            # 设置Geekbench 5所需的最小内存（MB）
-            min_required_memory=1024
-
-            if [ "$total_memory_swap" -lt "$min_required_memory" ]; then
-                echo "本机内存和Swap总计小于${min_required_memory}MB，不满足GB5测试条件。"
-                echo "系统总内存: ${total_memory_mb}MB"
-                echo "Swap大小: ${total_swap_mb}MB"
-                echo "总计: ${total_memory_swap}MB"
-                echo "将跳过Geekbench 5测试，进行其他测试项目。"
-                sleep 3
-                # 跳过Geekbench 5测试，继续执行其他测试
-                # 可以在这里调用其他测试函数或脚本
-            else
-                echo -e "运行${YELLOW}Geekbench 5...${NC}"
-                bash <(curl -sL gb5.top) | tee "$temp_file"
-                sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
-                sed -i 's/\x1B\[.*?[mGKH]//g' "$temp_file"
-                sed -i 's/\r//' "$temp_file" 
-                sed -i '/^$/d' "$temp_file" 
-                sed -i -n '/当前时间：/,${p}' "$temp_file"
-                cp "$temp_file" "${output_file}_gb5"
-            fi
-            ;;
         # 融合怪
-        3)
+        2)
             echo -e "运行${YELLOW}融合怪...${NC}"
             curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh -m 1 <<< "y" | tee "$temp_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
@@ -410,7 +380,7 @@ run_script() {
             cp "$temp_file" "${output_file}_fusion"
             ;;
         # IP质量
-        4)
+        3)
             echo -e "运行${YELLOW}IP质量测试...${NC}"
             echo y | bash <(curl -Ls IP.Check.Place) | tee "$temp_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
@@ -421,7 +391,7 @@ run_script() {
             cp "$temp_file" "${output_file}_ip_quality"
             ;;
         # 流媒体解锁
-        5)
+        4)
             echo -e "运行${YELLOW}流媒体解锁测试...${NC}"
             local region=$(detect_region)
             bash <(curl -L -s media.ispvps.com) <<< "$region" | tee "$temp_file"
@@ -432,14 +402,14 @@ run_script() {
             cp "$temp_file" "${output_file}_streaming"
             ;;
         # 响应测试
-        6)
+        5)
             echo -e "运行${YELLOW}响应测试...${NC}"
             bash <(curl -sL https://nodebench.mereith.com/scripts/curltime.sh) | tee "$temp_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             cp "$temp_file" "${output_file}_response"
             ;;
         # 多线程测速
-        7)
+        6)
             echo -e "运行${YELLOW}多线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
@@ -456,7 +426,7 @@ run_script() {
             cp "$temp_file" "${output_file}_multi_thread"
             ;;
         # 单线程测速
-        8)
+        7)
             echo -e "运行${YELLOW}单线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
@@ -473,7 +443,7 @@ run_script() {
             cp "$temp_file" "${output_file}_single_thread"
             ;;
         # iperf3测试
-        9)
+        8)
             echo -e "运行${YELLOW}iperf3测试...${NC}"
             run_iperf3_test | tee "$temp_file"
             sed -i -e 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
@@ -482,7 +452,7 @@ run_script() {
             cp "$temp_file" "${output_file}_iperf3"
             ;;
         # 回程路由
-        10)
+        9)
             echo -e "运行${YELLOW}回程路由测试...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
@@ -571,15 +541,14 @@ run_selected_scripts() {
     local base_output_file="NLvps_results_$(date +%Y%m%d_%H%M%S)"
     echo -e "${YELLOW}Nodeloc VPS 自动测试脚本 $VERSION${NC}"
     echo "1. Yabs"
-    echo "2. Geekbench5"
-    echo "3. 融合怪"
-    echo "4. IP质量"
-    echo "5. 流媒体解锁"
-    echo "6. 响应测试"
-    echo "7. 多线程测试"
-    echo "8. 单线程测试"
-    echo "9. iperf3"
-    echo "10. 回程路由"
+    echo "2. 融合怪"
+    echo "3. IP质量"
+    echo "4. 流媒体解锁"
+    echo "5. 响应测试"
+    echo "6. 多线程测试"
+    echo "7. 单线程测试"
+    echo "8. iperf3"
+    echo "9. 回程路由"
     echo "0. 返回"
     
     while true; do
@@ -587,7 +556,7 @@ run_selected_scripts() {
         if [[ "$script_numbers" =~ ^(0|10|[1-9])(,(0|10|[1-9]))*$ ]]; then
             break
         else
-            echo -e "${RED}无效输入，请输入0-10之间的数字，用英文逗号分隔。${NC}"
+            echo -e "${RED}无效输入，请输入0-9之间的数字，用英文逗号分隔。${NC}"
         fi
     done
 
@@ -607,7 +576,7 @@ run_selected_scripts() {
 
 # 主菜单
 main_menu() {
-    echo -e "${GREEN}测试项目：${NC}Yabs，Geekbench5，融合怪，IP质量，流媒体解锁，响应测试，多线程测试，"
+    echo -e "${GREEN}测试项目：${NC}Yabs，融合怪，IP质量，流媒体解锁，响应测试，多线程测试，"
     echo "           单线程测试，iperf3，回程路由。"
     echo -e "${YELLOW}1. 执行所有测试脚本${NC}"
     echo -e "${YELLOW}2. 选择特定测试脚本${NC}"
