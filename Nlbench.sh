@@ -481,7 +481,7 @@ generate_markdown_output() {
     local txt_url="http://nodeloc.uukk.de/test/${filename}"
 
     # 上传文件到 VPS，确保使用 UTF-8 编码
-    if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$txt_url"; then
+    if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$url"; then
         echo "测试结果已上传。您可以在以下链接查看：$txt_url"
     else
         echo "上传失败。结果已保存在本地文件 $(realpath "$temp_output_file")"
