@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义版本
-CURRENT_VERSION="2024-09-07 v1.2.1" # 最新版本号
+CURRENT_VERSION="2024-09-07 v1.2.2" # 最新版本号
 SCRIPT_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/version.sh"
 PASTE_SERVICE_URL="http://nodeloc.uukk.de/test/"
@@ -519,9 +519,9 @@ generate_markdown_output() {
     if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$txt_url" && \
        echo "$html_content" | curl -H "Content-Type: text/html; charset=utf-8" -s -X PUT --data-binary @- "$html_url"; then
         echo "测试结果已上传。您可以在以下链接查看："
-        echo "$html_url"
+        echo "$txt_url"
         echo "结果链接已保存到 $base_output_file.url"
-        echo "$html_url" > "$base_output_file.url"
+        echo "$txt_url" > "$base_output_file.url"
     else
         echo "上传失败。结果已保存在本地文件 $temp_output_file"
     fi
