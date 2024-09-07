@@ -455,19 +455,21 @@ generate_markdown_output() {
     # 修改这里，添加 UTF-8 编码设置
     echo "[tabs]" | iconv -f UTF-8 -t UTF-8//IGNORE > "$temp_output_file"
 
+    # 输出有内容的标签
     for i in "${!sections[@]}"; do
         section="${sections[$i]}"
         suffix="${file_suffixes[$i]}"
         if [ -f "${base_output_file}_${suffix}" ]; then
-            echo "[tab=\"$section\"]" >> "$temp_output_file"
+            echo "[tab=\"$section\"]" | iconv -f UTF-8 -t UTF-8//IGNORE >> "$temp_output_file"
             echo "\`\`\`" >> "$temp_output_file"
-            cat "${base_output_file}_${suffix}" >> "$temp_output_file"
+            cat "${base_output_file}_${suffix}" | iconv -f UTF-8 -t UTF-8//IGNORE >> "$temp_output_file"
             echo "\`\`\`" >> "$temp_output_file"
             echo "[/tab]" >> "$temp_output_file"
             rm "${base_output_file}_${suffix}"
         fi
     done
 
+    # 添加保留的空白标签
     for tab in "${empty_tabs[@]}"; do
         echo "[tab=\"$tab\"]" >> "$temp_output_file"
         echo "[/tab]" >> "$temp_output_file"
@@ -475,19 +477,24 @@ generate_markdown_output() {
 
     echo "[/tabs]" >> "$temp_output_file"
 
+    # 生成包含时间戳和随机字符的文件名
     local timestamp=$(date +"%Y%m%d%H%M%S")
     local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-    local filename="${timestamp}-${random_chars}.txt"
-    local txt_url="http://nodeloc.uukk.de/test/${filename}"
-
-    # 上传文件到 VPS，确保使用 UTF-8 编码
-    if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$url"; then
-        echo "测试结果已上传。您可以在以下链接查看：$txt_url"
+    local filename="${timestamp}${random_chars}.txt"
+    
+    # 构造完整的URL
+    local url="http://nodeloc.uukk.de/test/${filename}"
+    
+    # 上传文件
+    if curl -s -X PUT --data-binary @"$temp_output_file" "$url"; then
+        echo "测试结果已上传。您可以在以下链接查看："
+        echo "$url"
+        echo "结果链接已保存到 $base_output_file.url"
+        echo "$url" > "$base_output_file.url"
     else
-        echo "上传失败。结果已保存在本地文件 $(realpath "$temp_output_file")"
+        echo "上传失败。结果已保存在本地文件 $temp_output_file"
     fi
 
-    # 删除本地的 Markdown 文件
     rm "$temp_output_file"
     read -p "按回车键继续..."
     clear
