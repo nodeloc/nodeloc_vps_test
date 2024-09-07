@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # 定义版本
-CURRENT_VERSION="2024-08-28 v1.1.4" # 最新版本号
+CURRENT_VERSION="2024-09-07 v1.2.0" # 最新版本号
 SCRIPT_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/version.sh"
+PASTE_SERVICE_URL="http://nodeloc.uukk.de/test/"
 
 # 定义颜色
 RED='\033[0;31m'
@@ -501,36 +502,54 @@ run_script() {
 # 生成最终的 Markdown 输出
 generate_markdown_output() {
     local base_output_file=$1
-    local final_output_file="${base_output_file}.md"
+    local temp_output_file="${base_output_file}.md"
     local sections=("YABS" "Geekbench5" "融合怪" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "iperf3" "回程路由")
     local file_suffixes=("yabs" "gb5" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "iperf3" "route")
     local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
 
-    echo "[tabs]" > "$final_output_file"
+    echo "[tabs]" > "$temp_output_file"
 
     # 输出有内容的标签
     for i in "${!sections[@]}"; do
         section="${sections[$i]}"
         suffix="${file_suffixes[$i]}"
         if [ -f "${base_output_file}_${suffix}" ]; then
-            echo "[tab=\"$section\"]" >> "$final_output_file"
-            echo "\`\`\`" >> "$final_output_file"
-            cat "${base_output_file}_${suffix}" >> "$final_output_file"
-            echo "\`\`\`" >> "$final_output_file"
-            echo "[/tab]" >> "$final_output_file"
+            echo "[tab=\"$section\"]" >> "$temp_output_file"
+            echo "\`\`\`" >> "$temp_output_file"
+            cat "${base_output_file}_${suffix}" >> "$temp_output_file"
+            echo "\`\`\`" >> "$temp_output_file"
+            echo "[/tab]" >> "$temp_output_file"
             rm "${base_output_file}_${suffix}"
         fi
     done
 
     # 添加保留的空白标签
     for tab in "${empty_tabs[@]}"; do
-        echo "[tab=\"$tab\"]" >> "$final_output_file"
-        echo "[/tab]" >> "$final_output_file"
+        echo "[tab=\"$tab\"]" >> "$temp_output_file"
+        echo "[/tab]" >> "$temp_output_file"
     done
 
-    echo "[/tabs]" >> "$final_output_file"
+    echo "[/tabs]" >> "$temp_output_file"
 
-    echo "所有测试完成，结果已保存在 $final_output_file 中。"
+    # 生成包含时间戳和随机字符的文件名
+    local timestamp=$(date +"%Y%m%d%H%M%S")
+    local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
+    local filename="${timestamp}${random_chars}.txt"
+    
+    # 构造完整的URL
+    local url="${PASTE_SERVICE_URL}${filename}"
+    
+    # 上传文件
+    if curl -s -X PUT --data-binary @"$temp_output_file" "$url"; then
+        echo "测试结果已上传。您可以在以下链接查看："
+        echo "$url"
+        echo "结果链接已保存到 $base_output_file.url"
+        echo "$url" > "$base_output_file.url"
+    else
+        echo "上传失败。结果已保存在本地文件 $temp_output_file"
+    fi
+
+    rm "$temp_output_file"
     read -p "按回车键继续..."
     clear
 }
