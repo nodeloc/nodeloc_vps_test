@@ -452,7 +452,8 @@ generate_markdown_output() {
     local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "route")
     local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
 
-    echo "[tabs]" > "$temp_output_file"
+    # 修改这里，添加 UTF-8 编码设置
+    echo "[tabs]" | iconv -f UTF-8 -t UTF-8//IGNORE > "$temp_output_file"
 
     for i in "${!sections[@]}"; do
         section="${sections[$i]}"
@@ -473,10 +474,6 @@ generate_markdown_output() {
     done
 
     echo "[/tabs]" >> "$temp_output_file"
-
-    # 确保文件以 UTF-8 编码保存
-    iconv -f UTF-8 -t UTF-8 "$temp_output_file" -o "${temp_output_file}.utf8"
-    mv "${temp_output_file}.utf8" "$temp_output_file"
 
     local timestamp=$(date +"%Y%m%d%H%M%S")
     local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
