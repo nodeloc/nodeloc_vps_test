@@ -4,7 +4,7 @@
 CURRENT_VERSION="2024-09-07 v1.2.3" # 最新版本号
 SCRIPT_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/version.sh"
-PASTE_SERVICE_URL="http://nodeloc.uukk.de/test/"
+CLOUD_SERVICE_BASE="https://bench.nodeloc.cc/"
 
 # 定义颜色
 RED='\033[0;31m'
@@ -477,23 +477,22 @@ generate_markdown_output() {
 
     echo "[/tabs]" >> "$temp_output_file"
 
-    # 生成包含时间戳和随机字符的文件名
-    local timestamp=$(date +"%Y%m%d%H%M%S")
-    local random_chars=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1)
-    local filename="${timestamp}${random_chars}.txt"
+
+    # 上传文件 获取回调
+    local plain_uploaded_file=$(cat ${temp_output_file}|curl -s -X POST --data-binary @- ${CLOUD_SERVICE_BASE}test.php);
+    local plain_uploaded_file_filename=$(echo "$plain_uploaded_file" | grep -oP "$CLOUD_SERVICE_BASE\K.*")
+
     
-    # 构造完整的URL
-    local url="http://nodeloc.uukk.de/test/${filename}"
-    
-    # 上传文件
-if curl -H "Content-Type: text/plain; charset=utf-8" -s -X PUT --data-binary @"$temp_output_file" "$url"; then
-    echo "测试结果已上传。您可以在以下链接查看："
-    echo "$url"
-    echo "结果链接已保存到 $base_output_file.url"
-    echo "$url" > "$base_output_file.url"
-else
-    echo "上传失败。结果已保存在本地文件 $temp_output_file"
-fi
+    if [ $plain_uploaded_file ]; then
+        echo -e "${CLOUD_SERVICE_BASE}result/${plain_uploaded_file_filename}\r\nPlain $plain_uploaded_file" > "$plain_uploaded_file_filename.url"
+
+        echo "测试结果已上传。您可以在以下链接查看："
+        echo "${CLOUD_SERVICE_BASE}result/${plain_uploaded_file_filename}"
+        echo "Plain $plain_uploaded_file"
+        echo "结果链接已保存到 $plain_uploaded_file_filename.url"
+    else
+        echo "上传失败。结果已保存在本地文件 $temp_output_file"
+    fi
 
     rm "$temp_output_file"
     read -p "按回车键继续..."
