@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 定义版本
-CURRENT_VERSION="2024-09-08 v1.2.4" # 最新版本号
+CURRENT_VERSION="2024-09-21 v1.2.5" # 最新版本号
 SCRIPT_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://raw.githubusercontent.com/everett7623/nodeloc_vps_test/main/version.sh"
 CLOUD_SERVICE_BASE="https://bench.nodeloc.cc/"
@@ -414,10 +414,10 @@ run_script() {
             echo -e "运行${YELLOW}单线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
-            bash <(curl -sL bash.icu/speedtest) <<< "17" | tee "$temp_file"
+            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "17" | tee "$temp_file"
             else
             echo "使用IPv4测试选项"
-            bash <(curl -sL bash.icu/speedtest) <<< "2" | tee "$temp_file"
+            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "2" | tee "$temp_file"
             fi
             sed -r -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -r '1,/序号\:/d' "$temp_file"
