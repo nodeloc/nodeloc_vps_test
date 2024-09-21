@@ -351,20 +351,10 @@ run_script() {
             sed -i 's/\.\.\./\.\.\.\n/g' "$temp_file"
             sed -i '/\.\.\./d' "$temp_file"
             sed -i '/^\s*$/d'   "$temp_file"
-            cp "$temp_file" "${output_file}_yabs"
-            ;;
-        # 融合怪
-        2)
-            echo -e "运行${YELLOW}融合怪...${NC}"
-            curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh -m -base -bansp -banup <<< "y" | tee "$temp_file"
-            sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
-            sed -i 's/\.\.\.\.\.\./\.\.\.\.\.\.\n/g' "$temp_file"
-            sed -i '1,/\.\.\.\.\.\./d' "$temp_file"
-            sed -i -n '/--------------------- A Bench Script By spiritlhl ----------------------/,${s/^.*\(--------------------- A Bench Script By spiritlhl ----------------------\)/\1/;p}' "$temp_file"
-            cp "$temp_file" "${output_file}_fusion"
+            cp "$temp_file" "${output_file}_yabs" 
             ;;
         # IP质量
-        3)
+        2)
             echo -e "运行${YELLOW}IP质量测试...${NC}"
             echo y | bash <(curl -Ls IP.Check.Place) | tee "$temp_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
@@ -375,7 +365,7 @@ run_script() {
             cp "$temp_file" "${output_file}_ip_quality"
             ;;
         # 流媒体解锁
-        4)
+        3)
             echo -e "运行${YELLOW}流媒体解锁测试...${NC}"
             local region=$(detect_region)
             bash <(curl -L -s media.ispvps.com) <<< "$region" | tee "$temp_file"
@@ -386,14 +376,14 @@ run_script() {
             cp "$temp_file" "${output_file}_streaming"
             ;;
         # 响应测试
-        5)
+        4)
             echo -e "运行${YELLOW}响应测试...${NC}"
             bash <(curl -sL https://nodebench.mereith.com/scripts/curltime.sh) | tee "$temp_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             cp "$temp_file" "${output_file}_response"
             ;;
         # 多线程测速
-        6)
+        5)
             echo -e "运行${YELLOW}多线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
@@ -410,7 +400,7 @@ run_script() {
             cp "$temp_file" "${output_file}_multi_thread"
             ;;
         # 单线程测速
-        7)
+        6)
             echo -e "运行${YELLOW}单线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
@@ -427,7 +417,7 @@ run_script() {
             cp "$temp_file" "${output_file}_single_thread"
             ;;
         # 回程路由
-        8)
+        7)
             echo -e "运行${YELLOW}回程路由测试...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
@@ -448,8 +438,8 @@ run_script() {
 generate_markdown_output() {
     local base_output_file=$1
     local temp_output_file="${base_output_file}.md"
-    local sections=("YABS" "融合怪" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "回程路由")
-    local file_suffixes=("yabs" "fusion" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "route")
+    local sections=("YABS" "IP质量" "流媒体" "响应" "多线程测速" "单线程测速" "回程路由")
+    local file_suffixes=("yabs" "ip_quality" "streaming" "response" "multi_thread" "single_thread" "route")
     local empty_tabs=("去程路由" "Ping.pe" "哪吒 ICMP" "其他")
 
     # 修改这里，添加 UTF-8 编码设置
@@ -516,21 +506,20 @@ run_selected_scripts() {
     local base_output_file="NLvps_results_$(date +%Y%m%d_%H%M%S)"
     echo -e "${YELLOW}Nodeloc VPS 自动测试脚本 $VERSION${NC}"
     echo "1. Yabs"
-    echo "2. 融合怪"
-    echo "3. IP质量"
-    echo "4. 流媒体解锁"
-    echo "5. 响应测试"
-    echo "6. 多线程测试"
-    echo "7. 单线程测试"
-    echo "8. 回程路由"
+    echo "2. IP质量"
+    echo "3. 流媒体解锁"
+    echo "4. 响应测试"
+    echo "5. 多线程测试"
+    echo "6. 单线程测试"
+    echo "7. 回程路由"
     echo "0. 返回"
     
     while true; do
         read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers
-        if [[ "$script_numbers" =~ ^(0|10|[1-8])(,(0|10|[1-8]))*$ ]]; then
+        if [[ "$script_numbers" =~ ^(0|10|[1-7])(,(0|10|[1-7]))*$ ]]; then
             break
         else
-            echo -e "${RED}无效输入，请输入0-9之间的数字，用英文逗号分隔。${NC}"
+            echo -e "${RED}无效输入，请输入0-7之间的数字，用英文逗号分隔。${NC}"
         fi
     done
 
