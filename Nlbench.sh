@@ -539,7 +539,7 @@ run_selected_scripts() {
 
 # 主菜单
 main_menu() {
-    echo -e "${GREEN}测试项目：${NC}Yabs，融合怪，IP质量，流媒体解锁，响应测试，多线程测试，单线程测试，回程路由。"
+    echo -e "${GREEN}测试项目：${NC}Yabs，IP质量，流媒体解锁，响应测试，多线程测试，单线程测试，回程路由。"
     echo -e "${YELLOW}1. 执行所有测试脚本${NC}"
     echo -e "${YELLOW}2. 选择特定测试脚本${NC}"
     echo -e "${YELLOW}0. 退出${NC}"
