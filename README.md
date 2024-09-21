@@ -24,11 +24,11 @@ wget -O Nlbench.sh https://raw.githubusercontent.com/everett7623/nodeloc_vps_tes
 
 ### 效果图
 #### 运行截图
-![image](https://s.rmimg.com/2024/07/03/568e9f492ca50cd0af4cce8b88a6f156.png)
+![image](https://s.rmimg.com/2024/09/21/56db40f55c1d901066fe15973b70af06.png)
 
-![image](https://s.rmimg.com/2024/07/03/b13a1c30c5ad58d6ad56c8ce0cdbb43c.png)
+![image](https://s.rmimg.com/2024/09/21/b6a48d97e8124f452ef069901fe727d6.png)
 
-![image](https://s.rmimg.com/2024/07/03/40fa7d2f292b798199ef2b58d25e624b.png)
+![image](https://s.rmimg.com/2024/09/21/d697aac320074e6a0316aea2ae953efd.png)
 #### 生成内容
 以NiiHost商家提供的香港国际线路机器测试，此机器以免费虚拟主机的形式将上架Free NodeLoc
 ```
