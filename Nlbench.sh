@@ -421,10 +421,10 @@ run_script() {
             echo -e "运行${YELLOW}回程路由测试...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
-            wget -N --no-check-certificate https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "4" | tee "$temp_file"
+            wget -N --no-check-certificate https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && bash autoBestTrace.sh | tee "$temp_file"
             else
             echo "使用IPv4测试选项"
-            wget -N --no-check-certificate https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "1" | tee "$temp_file"
+            wget -N --no-check-certificate https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && bash autoBestTrace.sh | tee "$temp_file"
             fi
             sed -i -e 's/\x1B\[[0-9;]*[JKmsu]//g' -e '/No:1\/9 Traceroute to/,$!d' -e '/测试项/,+9d' -e '/信息/d' -e '/^\s*$/d' "$temp_file"
             cp "$temp_file" "${output_file}_route"
@@ -515,7 +515,7 @@ run_selected_scripts() {
     echo "0. 返回"
     
     while true; do
-        read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers
+        read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers  < /dev/tty
         if [[ "$script_numbers" =~ ^(0|10|[1-7])(,(0|10|[1-7]))*$ ]]; then
             break
         else
