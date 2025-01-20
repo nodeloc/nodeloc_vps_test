@@ -544,8 +544,8 @@ main_menu() {
     echo -e "${YELLOW}2. 选择特定测试脚本${NC}"
     echo -e "${YELLOW}0. 退出${NC}"
     
-    # 提示输入并读取
-    read -p "请选择操作 [0-2]: " choice
+    # 提示输入并读取，从终端读取输入
+    read -p "请选择操作 [0-2]: " choice < /dev/tty
 
     # 确保输入非空
     if [[ -z "$choice" ]]; then
@@ -576,6 +576,7 @@ main_menu() {
             ;;
     esac
 }
+
 
 
 # 输出欢迎信息
