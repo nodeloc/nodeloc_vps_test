@@ -2,8 +2,8 @@
 
 # 定义版本
 CURRENT_VERSION="2025-01-21 v1.2.7" # 最新版本号
-SCRIPT_URL="https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/Nlbench.sh"
-VERSION_URL="https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/version.sh"
+SCRIPT_URL="https://ghfast.top/https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/Nlbench.sh"
+VERSION_URL="https://ghfast.top/https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/version.sh"
 CLOUD_SERVICE_BASE="https://bench.nodeloc.cc/"
 
 # 定义颜色
@@ -387,10 +387,10 @@ run_script() {
             echo -e "运行${YELLOW}多线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "3" | tee "$temp_file"
+            bash <(curl -sL https://ghfast.top/https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "3" | tee "$temp_file"
             else
             echo "使用IPv4测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "1" | tee "$temp_file"
+            bash <(curl -sL https://ghfast.top/https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "1" | tee "$temp_file"
             fi
             sed -r -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -r '1,/序号\:/d' "$temp_file"
@@ -404,10 +404,10 @@ run_script() {
             echo -e "运行${YELLOW}单线程测速...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "17" | tee "$temp_file"
+            bash <(curl -sL https://ghfast.top/https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "17" | tee "$temp_file"
             else
             echo "使用IPv4测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "2" | tee "$temp_file"
+            bash <(curl -sL https://ghfast.top/https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "2" | tee "$temp_file"
             fi
             sed -r -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -r '1,/序号\:/d' "$temp_file"
@@ -421,10 +421,10 @@ run_script() {
             echo -e "运行${YELLOW}回程路由测试...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
-            wget -N --no-check-certificate https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "4" | tee "$temp_file"
+            wget -N --no-check-certificate https://ghfast.top/https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "4" | tee "$temp_file"
             else
             echo "使用IPv4测试选项"
-            wget -N --no-check-certificate https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "1" | tee "$temp_file"
+            wget -N --no-check-certificate https://ghfast.top/https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "1" | tee "$temp_file"
             fi
             sed -i -e 's/\x1B\[[0-9;]*[JKmsu]//g' -e '/No:1\/9 Traceroute to/,$!d' -e '/测试项/,+9d' -e '/信息/d' -e '/^\s*$/d' "$temp_file"
             cp "$temp_file" "${output_file}_route"
@@ -478,7 +478,7 @@ generate_markdown_output() {
 
         echo "测试结果已上传,您可以在以下链接查看："
         echo "${CLOUD_SERVICE_BASE}result/${plain_uploaded_file_filename}"
-        echo "Plain $plain_uploaded_file"
+        echo "Plain txt $plain_uploaded_file"
         echo "结果链接已保存到 $plain_uploaded_file_filename.url"
     else
         echo "上传失败。结果已保存在本地文件 $temp_output_file"
@@ -543,20 +543,8 @@ main_menu() {
     echo -e "${YELLOW}1. 执行所有测试脚本${NC}"
     echo -e "${YELLOW}2. 选择特定测试脚本${NC}"
     echo -e "${YELLOW}0. 退出${NC}"
-    
-    # 提示输入并读取
     read -p "请选择操作 [0-2]: " choice
 
-    # 确保输入非空
-    if [[ -z "$choice" ]]; then
-        echo -e "${RED}输入为空，请重新输入。${NC}"
-        sleep 2s
-        clear
-        main_menu
-        return
-    fi
-
-    # 检查输入是否合法
     case $choice in
         1)
             run_all_scripts
@@ -570,13 +558,12 @@ main_menu() {
             ;;
         *)
             echo -e "${RED}无效选择，请重新输入。${NC}"
-            sleep 2s
+            sleep 3s
             clear
-            main_menu
+            show_welcome
             ;;
     esac
 }
-
 
 # 输出欢迎信息
 show_welcome() {
