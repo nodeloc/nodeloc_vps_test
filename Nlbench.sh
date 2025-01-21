@@ -500,7 +500,6 @@ run_all_scripts() {
     clear
 }
 
-# 执行选定的脚本
 run_selected_scripts() {
     clear
     local base_output_file="NLvps_results_$(date +%Y%m%d_%H%M%S)"
@@ -513,9 +512,9 @@ run_selected_scripts() {
     echo "6. 单线程测试"
     echo "7. 回程路由"
     echo "0. 返回"
-    
+
     while true; do
-        read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers  < /dev/tty
+        read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers < /dev/tty
         if [[ "$script_numbers" =~ ^(0|10|[1-7])(,(0|10|[1-7]))*$ ]]; then
             break
         else
@@ -523,19 +522,25 @@ run_selected_scripts() {
         fi
     done
 
-    IFS=',' read -ra selected_scripts <<< "$script_numbers"
-    echo "开始执行选定的测试脚本..."
-    if [ "$script_numbers" == "0" ]; then
+    if [[ "$script_numbers" == "0" ]]; then
         clear
         show_welcome
-    else
-        for number in "${selected_scripts[@]}"; do
-            clear
-            run_script "$number" "$base_output_file"
-        done
-        generate_markdown_output "$base_output_file"
+        return  # 确保退出函数，不再继续执行
     fi
+
+    # 分割用户输入为数组
+    IFS=',' read -ra selected_scripts <<< "$script_numbers"
+
+    echo "开始执行选定的测试脚本..."
+    for number in "${selected_scripts[@]}"; do
+        clear
+        run_script "$number" "$base_output_file"
+    done
+
+    # 所有脚本执行完毕后生成 Markdown 输出
+    generate_markdown_output "$base_output_file"
 }
+
 
 # 主菜单
 main_menu() {
