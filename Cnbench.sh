@@ -251,6 +251,8 @@ install_dependencies() {
             done
             ;;
         *)
+            install_cmd="apt-get install -yq" 
+            export DEBIAN_FRONTEND=noninteractive 
             for dep in "${dependencies[@]}"; do
                 if ! command -v "$dep" &> /dev/null; then
                     echo -e "${YELLOW}正在安装 $dep...${NC}"
