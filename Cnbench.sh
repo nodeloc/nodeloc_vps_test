@@ -225,6 +225,7 @@ install_dependencies() {
     case "${os_type,,}" in
         debian|ubuntu)
             export DEBIAN_FRONTEND=noninteractive  # 禁用交互
+            echo "iperf3 iperf3/autostart boolean false" | sudo debconf-set-selections
             install_cmd="apt-get install -yq"
             sudo apt-get update -yq
             ;;
