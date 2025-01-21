@@ -460,10 +460,10 @@ generate_markdown_output() {
     done
 
     # 添加保留的空白标签
-    for tab in "${empty_tabs[@]}"; do
-        echo "[tab=\"$tab\"]" >> "$temp_output_file"
-        echo "[/tab]" >> "$temp_output_file"
-    done
+    #for tab in "${empty_tabs[@]}"; do
+    #    echo "[tab=\"$tab\"]" >> "$temp_output_file"
+    #    echo "[/tab]" >> "$temp_output_file"
+    #done
 
     echo "[/tabs]" >> "$temp_output_file"
 
