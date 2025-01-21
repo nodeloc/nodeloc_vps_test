@@ -202,7 +202,6 @@ update_system() {
 # 定义支持的操作系统类型
 SUPPORTED_OS=("ubuntu" "debian" "linuxmint" "elementary" "pop" "centos" "rhel" "fedora" "rocky" "almalinux" "openeuler" "opensuse" "sles" "arch" "manjaro" "alpine" "gentoo" "cloudlinux")
 
-# 安装依赖
 install_dependencies() {
     echo -e "${YELLOW}正在检查并安装必要的依赖项...${NC}"
     
@@ -224,50 +223,44 @@ install_dependencies() {
     fi
     
     case "${os_type,,}" in
-        gentoo)
-            install_cmd="emerge"
-            for dep in "${dependencies[@]}"; do
-                if ! emerge -p $dep &>/dev/null; then
-                    echo -e "${YELLOW}正在安装 $dep...${NC}"
-                    if ! sudo $install_cmd $dep; then
-                        echo -e "${RED}无法安装 $dep。请手动安装此依赖项。${NC}"
-                    fi
-                else
-                    echo -e "${GREEN}$dep 已安装。${NC}"
-                fi
-            done
+        debian|ubuntu)
+            export DEBIAN_FRONTEND=noninteractive  # 禁用交互
+            install_cmd="apt-get install -yq"
+            sudo apt-get update -yq
+            ;;
+        centos|rhel|fedora)
+            install_cmd="dnf install -y"
+            sudo dnf makecache
             ;;
         alpine)
-            install_cmd="apk add"
-            for dep in "${dependencies[@]}"; do
-                if ! command -v "$dep" &> /dev/null; then
-                    echo -e "${YELLOW}正在安装 $dep...${NC}"
-                    if ! sudo $install_cmd "$dep"; then
-                        echo -e "${RED}无法安装 $dep。请手动安装此依赖项。${NC}"
-                    fi
-                else
-                    echo -e "${GREEN}$dep 已安装。${NC}"
-                fi
-            done
+            install_cmd="apk add --no-cache"
+            ;;
+        gentoo)
+            install_cmd="emerge --quiet"
+            ;;
+        arch|manjaro)
+            install_cmd="pacman -S --noconfirm"
+            sudo pacman -Sy --noconfirm
             ;;
         *)
-            install_cmd="apt-get install -yq" 
-            export DEBIAN_FRONTEND=noninteractive 
-            for dep in "${dependencies[@]}"; do
-                if ! command -v "$dep" &> /dev/null; then
-                    echo -e "${YELLOW}正在安装 $dep...${NC}"
-                    if ! sudo $install_cmd "$dep"; then
-                        echo -e "${RED}无法安装 $dep。请手动安装此依赖项。${NC}"
-                    fi
-                else
-                    echo -e "${GREEN}$dep 已安装。${NC}"
-                fi
-            done
+            echo -e "${RED}未知的包管理器。请手动安装依赖项。${NC}"
+            return 1
             ;;
     esac
+
+    # 安装依赖项
+    for dep in "${dependencies[@]}"; do
+        if ! command -v "$dep" &>/dev/null; then
+            echo -e "${YELLOW}正在安装 $dep...${NC}"
+            if ! sudo $install_cmd "$dep"; then
+                echo -e "${RED}无法安装 $dep。请手动安装此依赖项。${NC}"
+            fi
+        else
+            echo -e "${GREEN}$dep 已安装。${NC}"
+        fi
+    done
     
     echo -e "${GREEN}依赖项检查和安装完成。${NC}"
-    clear
 }
 
 # 获取IP地址和ISP信息
