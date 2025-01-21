@@ -48,7 +48,7 @@ if (!is_dir($directory) && !mkdir($directory, 0755, true)) {
 $fileName = "NL" . time() . "-" . strtoupper(substr(md5($uploadData), 0, 6)) . ".txt";
 
 // 构造文件 URL
-$baseUrl = getHttpType() . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
+$baseUrl = rtrim(getHttpType() . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']), '/'); // 去掉末尾多余的斜杠
 $filePath = $directory . $fileName;
 
 // 保存文件
