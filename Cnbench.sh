@@ -4,7 +4,7 @@
 CURRENT_VERSION="2025-01-21 v1.2.7" # 最新版本号
 SCRIPT_URL="https://ghfast.top/https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/Nlbench.sh"
 VERSION_URL="https://ghfast.top/https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/version.sh"
-CLOUD_SERVICE_BASE="https://bench.nodeloc.cc/"
+CLOUD_SERVICE_BASE="https://bench.nodeloc.cc"
 
 # 定义颜色
 RED='\033[0;31m'
@@ -421,10 +421,10 @@ run_script() {
             echo -e "运行${YELLOW}回程路由测试...${NC}"
             if [ "$use_ipv6" = true ]; then
             echo "使用IPv6测试选项"
-            wget -N --no-check-certificate https://ghfast.top/https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "4" | tee "$temp_file"
+            wget -N --no-check-certificate https://ghfast.top/https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && bash autoBestTrace.sh | tee "$temp_file"
             else
             echo "使用IPv4测试选项"
-            wget -N --no-check-certificate https://ghfast.top/https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "1" | tee "$temp_file"
+            wget -N --no-check-certificate https://ghfast.top/https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && bash autoBestTrace.sh | tee "$temp_file"
             fi
             sed -i -e 's/\x1B\[[0-9;]*[JKmsu]//g' -e '/No:1\/9 Traceroute to/,$!d' -e '/测试项/,+9d' -e '/信息/d' -e '/^\s*$/d' "$temp_file"
             cp "$temp_file" "${output_file}_route"
@@ -460,32 +460,33 @@ generate_markdown_output() {
     done
 
     # 添加保留的空白标签
-    for tab in "${empty_tabs[@]}"; do
-        echo "[tab=\"$tab\"]" >> "$temp_output_file"
-        echo "[/tab]" >> "$temp_output_file"
-    done
+    #for tab in "${empty_tabs[@]}"; do
+    #    echo "[tab=\"$tab\"]" >> "$temp_output_file"
+    #    echo "[/tab]" >> "$temp_output_file"
+    #done
 
     echo "[/tabs]" >> "$temp_output_file"
 
-
     # 上传文件 获取回调
-    local plain_uploaded_file=$(cat ${temp_output_file}|curl -s -X POST --data-binary @- ${CLOUD_SERVICE_BASE});
-    local plain_uploaded_file_filename=$(echo "$plain_uploaded_file" | grep -oP "$CLOUD_SERVICE_BASE\K.*")
+    local plain_uploaded_file=$(cat "${temp_output_file}" | curl -s -X POST --data-binary @- "${CLOUD_SERVICE_BASE}")
+    local plain_uploaded_file_path=$(echo "$plain_uploaded_file" | grep -oP "(?<=${CLOUD_SERVICE_BASE}).*") 
+    local plain_uploaded_file_filename=$(basename "${plain_uploaded_file_path}")
 
-    
-    if [ $plain_uploaded_file ]; then
-        echo -e "${CLOUD_SERVICE_BASE}result/${plain_uploaded_file_filename}\r\nPlain $plain_uploaded_file" > "$plain_uploaded_file_filename.url"
-
-        echo "测试结果已上传,您可以在以下链接查看："
-        echo "${CLOUD_SERVICE_BASE}result/${plain_uploaded_file_filename}"
-        echo "Plain txt $plain_uploaded_file"
-        echo "结果链接已保存到 $plain_uploaded_file_filename.url"
+    if [ -n "$plain_uploaded_file" ]; then
+        local base_url=$(echo "${CLOUD_SERVICE_BASE}" | sed 's:/*$::')
+        local remote_url="${base_url}/result${plain_uploaded_file_path}"
+        echo -e "${remote_url}\r\nPlain ${plain_uploaded_file}" > "${plain_uploaded_file_filename}.url"
+        echo "测试结果已上传，您可以在以下链接查看："
+        echo "${remote_url}"
+        echo "Plain ${plain_uploaded_file}"
+        echo "结果链接已保存到 ${plain_uploaded_file_filename}.url"
     else
-        echo "上传失败。结果已保存在本地文件 $temp_output_file"
+        echo "上传失败. 结果已保存在本地文件 ${temp_output_file}"
     fi
 
+
     rm "$temp_output_file"
-    read -p "按回车键继续..."
+    read -p "按回车键继续..."  < /dev/tty
     clear
 }
 
@@ -500,7 +501,6 @@ run_all_scripts() {
     clear
 }
 
-# 执行选定的脚本
 run_selected_scripts() {
     clear
     local base_output_file="NLvps_results_$(date +%Y%m%d_%H%M%S)"
@@ -513,9 +513,9 @@ run_selected_scripts() {
     echo "6. 单线程测试"
     echo "7. 回程路由"
     echo "0. 返回"
-    
+
     while true; do
-        read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers
+        read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers < /dev/tty
         if [[ "$script_numbers" =~ ^(0|10|[1-7])(,(0|10|[1-7]))*$ ]]; then
             break
         else
@@ -523,19 +523,25 @@ run_selected_scripts() {
         fi
     done
 
-    IFS=',' read -ra selected_scripts <<< "$script_numbers"
-    echo "开始执行选定的测试脚本..."
-    if [ "$script_numbers" == "0" ]; then
+    if [[ "$script_numbers" == "0" ]]; then
         clear
         show_welcome
-    else
-        for number in "${selected_scripts[@]}"; do
-            clear
-            run_script "$number" "$base_output_file"
-        done
-        generate_markdown_output "$base_output_file"
+        return  # 确保退出函数，不再继续执行
     fi
+
+    # 分割用户输入为数组
+    IFS=',' read -ra selected_scripts <<< "$script_numbers"
+
+    echo "开始执行选定的测试脚本..."
+    for number in "${selected_scripts[@]}"; do
+        clear
+        run_script "$number" "$base_output_file"
+    done
+
+    # 所有脚本执行完毕后生成 Markdown 输出
+    generate_markdown_output "$base_output_file"
 }
+
 
 # 主菜单
 main_menu() {
@@ -543,8 +549,20 @@ main_menu() {
     echo -e "${YELLOW}1. 执行所有测试脚本${NC}"
     echo -e "${YELLOW}2. 选择特定测试脚本${NC}"
     echo -e "${YELLOW}0. 退出${NC}"
-    read -p "请选择操作 [0-2]: " choice
+    
+    # 提示输入并读取，从终端读取输入
+    read -p "请选择操作 [0-2]: " choice < /dev/tty
 
+    # 确保输入非空
+    if [[ -z "$choice" ]]; then
+        echo -e "${RED}输入为空，请重新输入。${NC}"
+        sleep 2s
+        clear
+        main_menu
+        return
+    fi
+
+    # 检查输入是否合法
     case $choice in
         1)
             run_all_scripts
@@ -558,12 +576,14 @@ main_menu() {
             ;;
         *)
             echo -e "${RED}无效选择，请重新输入。${NC}"
-            sleep 3s
+            sleep 2s
             clear
-            show_welcome
+            main_menu
             ;;
     esac
 }
+
+
 
 # 输出欢迎信息
 show_welcome() {
