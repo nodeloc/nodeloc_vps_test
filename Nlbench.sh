@@ -485,7 +485,7 @@ generate_markdown_output() {
     fi
 
     rm "$temp_output_file"
-    read -p "按回车键继续..."
+    read -p "按回车键继续..."  < /dev/tty
     clear
 }
 
