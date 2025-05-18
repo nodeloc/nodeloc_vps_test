@@ -6,6 +6,19 @@ SCRIPT_URL="https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/Nlbe
 VERSION_URL="https://raw.githubusercontent.com/nodeloc/nodeloc_vps_test/main/version.sh"
 CLOUD_SERVICE_BASE="https://bench.nodeloc.cc"
 
+# 设置退出处理函数
+cleanup() {
+    echo -e "\n${YELLOW}脚本被中断，正在清理临时文件...${NC}"
+    # 清理所有临时文件
+    rm -f /tmp/NLbench_* 2>/dev/null
+    rm -f AutoTrace.sh 2>/dev/null
+    echo -e "${GREEN}清理完成。感谢使用！${NC}"
+    exit 1
+}
+
+# 捕获中断信号
+trap cleanup SIGINT SIGTERM ERR
+
 # 定义颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -342,9 +355,12 @@ run_script() {
     ip_address_and_isp
     case $script_number in
         # YABS
-        1)
-            echo -e "运行${YELLOW}YABS...${NC}"
-            curl -sL yabs.sh | bash -s -- -i -5 | tee "$temp_file"
+        1)            echo -e "运行${YELLOW}YABS...${NC}"
+            # 下载脚本到临时文件
+            local script_file=$(mktemp)
+            curl -sL yabs.sh > "$script_file"
+            bash "$script_file" -i -5 | tee "$temp_file"
+            rm -f "$script_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i 's/\.\.\./\.\.\.\n/g' "$temp_file"
             sed -i '/\.\.\./d' "$temp_file"
@@ -352,9 +368,12 @@ run_script() {
             cp "$temp_file" "${output_file}_yabs" 
             ;;
         # IP质量
-        2)
-            echo -e "运行${YELLOW}IP质量测试...${NC}"
-            echo y | bash <(curl -Ls IP.Check.Place) | tee "$temp_file"
+        2)            echo -e "运行${YELLOW}IP质量测试...${NC}"
+            # 下载脚本到临时文件
+            local script_file=$(mktemp)
+            curl -Ls IP.Check.Place > "$script_file"
+            echo y | bash "$script_file" | tee "$temp_file"
+            rm -f "$script_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -r 's/(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏)/\n/g' "$temp_file"
             sed -i -r '/正在检测/d' "$temp_file"
@@ -363,10 +382,13 @@ run_script() {
             cp "$temp_file" "${output_file}_ip_quality"
             ;;
         # 流媒体解锁
-        3)
-            echo -e "运行${YELLOW}流媒体解锁测试...${NC}"
+        3)            echo -e "运行${YELLOW}流媒体解锁测试...${NC}"
             local region=$(detect_region)
-            bash <(curl -L -s media.ispvps.com) <<< "$region" | tee "$temp_file"
+            # 使用临时文件保存脚本来执行，避免直接从URL执行
+            local script_file=$(mktemp)
+            curl -L -s media.ispvps.com > "$script_file"
+            echo "$region" | bash "$script_file" | tee "$temp_file"
+            rm -f "$script_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -n '/流媒体平台及游戏区域限制测试/,$p' "$temp_file"
             sed -i '1d' "$temp_file"
@@ -374,22 +396,29 @@ run_script() {
             cp "$temp_file" "${output_file}_streaming"
             ;;
         # 响应测试
-        4)
-            echo -e "运行${YELLOW}响应测试...${NC}"
-            bash <(curl -sL https://nodebench.mereith.com/scripts/curltime.sh) | tee "$temp_file"
+        4)            echo -e "运行${YELLOW}响应测试...${NC}"
+            # 下载脚本到临时文件
+            local script_file=$(mktemp)
+            curl -sL https://nodebench.mereith.com/scripts/curltime.sh > "$script_file"
+            bash "$script_file" | tee "$temp_file"
+            rm -f "$script_file"
             sed -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             cp "$temp_file" "${output_file}_response"
             ;;
         # 多线程测速
-        5)
-            echo -e "运行${YELLOW}多线程测速...${NC}"
+        5)            echo -e "运行${YELLOW}多线程测速...${NC}"
+            # 下载脚本到临时文件
+            local script_file=$(mktemp)
+            curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh > "$script_file"
+            
             if [ "$use_ipv6" = true ]; then
-            echo "使用IPv6测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "3" | tee "$temp_file"
+                echo "使用IPv6测试选项"
+                echo "3" | bash "$script_file" | tee "$temp_file"
             else
-            echo "使用IPv4测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "1" | tee "$temp_file"
+                echo "使用IPv4测试选项"
+                echo "1" | bash "$script_file" | tee "$temp_file"
             fi
+            rm -f "$script_file"
             sed -r -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -r '1,/序号\:/d' "$temp_file"
             sed -i -r 's/(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏)/\n/g' "$temp_file"
@@ -398,15 +427,19 @@ run_script() {
             cp "$temp_file" "${output_file}_multi_thread"
             ;;
         # 单线程测速
-        6)
-            echo -e "运行${YELLOW}单线程测速...${NC}"
+        6)            echo -e "运行${YELLOW}单线程测速...${NC}"
+            # 下载脚本到临时文件
+            local script_file=$(mktemp)
+            curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh > "$script_file"
+            
             if [ "$use_ipv6" = true ]; then
-            echo "使用IPv6测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "17" | tee "$temp_file"
+                echo "使用IPv6测试选项"
+                echo "17" | bash "$script_file" | tee "$temp_file"
             else
-            echo "使用IPv4测试选项"
-            bash <(curl -sL https://raw.githubusercontent.com/i-abc/Speedtest/main/speedtest.sh) <<< "2" | tee "$temp_file"
+                echo "使用IPv4测试选项"
+                echo "2" | bash "$script_file" | tee "$temp_file"
             fi
+            rm -f "$script_file"
             sed -r -i 's/\x1B\[[0-9;]*[JKmsu]//g' "$temp_file"
             sed -i -r '1,/序号\:/d' "$temp_file"
             sed -i -r 's/(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏)/\n/g' "$temp_file"
@@ -415,14 +448,17 @@ run_script() {
             cp "$temp_file" "${output_file}_single_thread"
             ;;
         # 回程路由
-        7)
-            echo -e "运行${YELLOW}回程路由测试...${NC}"
+        7)            echo -e "运行${YELLOW}回程路由测试...${NC}"
+            # 下载脚本
+            wget -N --no-check-certificate https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh
+            chmod +x AutoTrace.sh
+            
             if [ "$use_ipv6" = true ]; then
-            echo "使用IPv6测试选项"
-            wget -N --no-check-certificate https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "4" | tee "$temp_file"
+                echo "使用IPv6测试选项"
+                echo "4" | bash AutoTrace.sh | tee "$temp_file"
             else
-            echo "使用IPv4测试选项"
-            wget -N --no-check-certificate https://raw.githubusercontent.com/Chennhaoo/Shell_Bash/master/AutoTrace.sh && chmod +x AutoTrace.sh && bash AutoTrace.sh <<< "1" | tee "$temp_file"
+                echo "使用IPv4测试选项"
+                echo "1" | bash AutoTrace.sh | tee "$temp_file"
             fi
             sed -i -e 's/\x1B\[[0-9;]*[JKmsu]//g' -e '/No:1\/9 Traceroute to/,$!d' -e '/测试项/,+9d' -e '/信息/d' -e '/^\s*$/d' "$temp_file"
             cp "$temp_file" "${output_file}_route"
@@ -463,9 +499,7 @@ generate_markdown_output() {
     #    echo "[/tab]" >> "$temp_output_file"
     #done
 
-    echo "[/tabs]" >> "$temp_output_file"
-
-    # 上传文件 获取回调
+    echo "[/tabs]" >> "$temp_output_file"    # 上传文件 获取回调
     local plain_uploaded_file=$(cat "${temp_output_file}" | curl -s -X POST --data-binary @- "${CLOUD_SERVICE_BASE}")
     local plain_uploaded_file_path=$(echo "$plain_uploaded_file" | grep -oP "(?<=${CLOUD_SERVICE_BASE}).*") 
     local plain_uploaded_file_filename=$(basename "${plain_uploaded_file_path}")
@@ -481,10 +515,9 @@ generate_markdown_output() {
     else
         echo "上传失败. 结果已保存在本地文件 ${temp_output_file}"
     fi
-
-
     rm "$temp_output_file"
-    read -p "按回车键继续..."  < /dev/tty
+    # 使用安全读取方法等待用户输入
+    safe_read "按回车键继续..."
     clear
 }
 
@@ -492,7 +525,8 @@ generate_markdown_output() {
 run_all_scripts() {
     local base_output_file="NLvps_results_$(date +%Y%m%d_%H%M%S)"
     echo "开始执行全部测试脚本..."
-    for i in {1..10}; do
+    # 只执行1-7的脚本，不执行8-10
+    for i in {1..7}; do
         run_script $i "$base_output_file"
     done
     generate_markdown_output "$base_output_file"
@@ -506,14 +540,14 @@ run_selected_scripts() {
     echo "1. Yabs"
     echo "2. IP质量"
     echo "3. 流媒体解锁"
-    echo "4. 响应测试"
+    echo "4. 响应测试"    
     echo "5. 多线程测试"
     echo "6. 单线程测试"
     echo "7. 回程路由"
     echo "0. 返回"
-
+    
     while true; do
-        read -p "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):" script_numbers < /dev/tty
+        script_numbers=$(safe_read "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):")
         if [[ "$script_numbers" =~ ^(0|10|[1-7])(,(0|10|[1-7]))*$ ]]; then
             break
         else
@@ -548,9 +582,10 @@ main_menu() {
     echo -e "${YELLOW}2. 选择特定测试脚本${NC}"
     echo -e "${YELLOW}0. 退出${NC}"
     
-    # 提示输入并读取，从终端读取输入
-    read -p "请选择操作 [0-2]: " choice < /dev/tty
-
+    # 直接读取输入
+    echo -n "请选择操作 [0-2]: "
+    read choice
+    
     # 确保输入非空
     if [[ -z "$choice" ]]; then
         echo -e "${RED}输入为空，请重新输入。${NC}"
@@ -559,21 +594,25 @@ main_menu() {
         main_menu
         return
     fi
-
+    
     # 检查输入是否合法
-    case $choice in
-        1)
+    echo "您选择了: $choice"
+      # 去除可能存在的空白字符
+    choice=$(echo "$choice" | tr -d '[:space:]')
+    
+    case "$choice" in
+        "1")
             run_all_scripts
             ;;
-        2)
+        "2")
             run_selected_scripts
             ;;
-        0)
+        "0")
             echo -e "${RED}感谢使用NodeLoc聚合测试脚本，已退出脚本，期待你的下次使用！${NC}"
             exit 0
             ;;
         *)
-            echo -e "${RED}无效选择，请重新输入。${NC}"
+            echo -e "${RED}无效选择 '$choice'，请重新输入。${NC}"
             sleep 2s
             clear
             main_menu
@@ -582,6 +621,17 @@ main_menu() {
 }
 
 
+
+# 安全的直接读取用户输入
+safe_read() {
+    # 显示参数1作为提示信息
+    echo -n "$1"
+    
+    # 直接读取输入到变量中
+    local input=""
+    read input || input=""
+    echo "$input"
+}
 
 # 输出欢迎信息
 show_welcome() {
