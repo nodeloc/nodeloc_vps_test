@@ -234,13 +234,18 @@ install_dependencies() {
         echo -e "${RED}不支持的操作系统: $os_type${NC}"
         return 1
     fi
-    
-    case "${os_type,,}" in
+      case "${os_type,,}" in
         debian|ubuntu)
             export DEBIAN_FRONTEND=noninteractive 
+            
+            # 预先配置iperf3，以避免交互式提示
             echo "iperf3 iperf3/autostart boolean false" | sudo debconf-set-selections
-            install_cmd="apt-get install -yq"
-            sudo apt-get update -yq
+            
+            # 添加更强的非交互设置，防止任何debconf提示
+            install_cmd="DEBIAN_FRONTEND=noninteractive apt-get install -yq"
+            
+            # 更新软件包列表
+            sudo DEBIAN_FRONTEND=noninteractive apt-get update -yq
             ;;
         centos|rhel|fedora)
             install_cmd="dnf install -y"
@@ -260,14 +265,26 @@ install_dependencies() {
             echo -e "${RED}未知的包管理器。请手动安装依赖项。${NC}"
             return 1
             ;;
-    esac
-
-    # 安装依赖项
+    esac    # 安装依赖项
     for dep in "${dependencies[@]}"; do
         if ! command -v "$dep" &>/dev/null; then
             echo -e "${YELLOW}正在安装 $dep...${NC}"
-            if ! sudo $install_cmd "$dep"; then
-                echo -e "${RED}无法安装 $dep。请手动安装此依赖项。${NC}"
+            
+            # 对于iperf3特殊处理
+            if [ "$dep" = "iperf3" ] && [[ "${os_type,,}" =~ ^(debian|ubuntu)$ ]]; then
+                # 预先强制配置iperf3不自动启动
+                echo -e "${YELLOW}预先配置iperf3不自动启动...${NC}"
+                echo "iperf3 iperf3/autostart boolean false" | sudo debconf-set-selections
+                
+                # 使用强制非交互模式
+                if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq "$dep"; then
+                    echo -e "${RED}无法安装 $dep。请手动安装此依赖项。${NC}"
+                fi
+            else
+                # 其他依赖项正常安装
+                if ! sudo $install_cmd "$dep"; then
+                    echo -e "${RED}无法安装 $dep。请手动安装此依赖项。${NC}"
+                fi
             fi
         else
             echo -e "${GREEN}$dep 已安装。${NC}"
