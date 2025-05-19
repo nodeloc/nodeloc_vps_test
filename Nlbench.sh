@@ -545,13 +545,22 @@ run_selected_scripts() {
     echo "6. 单线程测试"
     echo "7. 回程路由"
     echo "0. 返回"
-    
-    while true; do
-        script_numbers=$(safe_read "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3):")
-        if [[ "$script_numbers" =~ ^(0|10|[1-7])(,(0|10|[1-7]))*$ ]]; then
+      while true; do
+        echo -n "请输入要执行的脚本编号（用英文逗号分隔，例如：1,2,3): "
+        read script_numbers
+        
+        # 清理输入 - 去除可能的空格和冒号
+        script_numbers=$(echo "$script_numbers" | tr -d ' ' | sed 's/^://g')
+        
+        # 打印调试信息
+        echo "收到输入: '$script_numbers'"
+        
+        if [[ -z "$script_numbers" ]]; then
+            echo -e "${RED}输入为空，请重新输入。${NC}"
+            continue
+        elif [[ "$script_numbers" =~ ^([0-7](,[0-7])*)$ ]]; then
             break
-        else
-            echo -e "${RED}无效输入，请输入0-7之间的数字，用英文逗号分隔。${NC}"
+        else            echo -e "${RED}无效输入 '$script_numbers'，请输入0-7之间的数字，用英文逗号分隔。${NC}"
         fi
     done
 
@@ -561,6 +570,9 @@ run_selected_scripts() {
         return  # 确保退出函数，不再继续执行
     fi
 
+    # 添加调试信息
+    echo -e "${GREEN}你选择了: $script_numbers${NC}"
+    
     # 分割用户输入为数组
     IFS=',' read -ra selected_scripts <<< "$script_numbers"
 
